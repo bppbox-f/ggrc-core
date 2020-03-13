@@ -973,7 +973,7 @@ class TestSnapshoting(SnapshotterBaseTestCase):
         '/api/assessments/{}/related_objects'.format(assessment_id)
     ).json
     snapshot = models.Snapshot.query.get(snapshot_id)
-    self.assertTrue(snapshot.original_object_deleted)
+    self.assertFalse(snapshot.original_object_deleted)
     self.assertEqual(revision_id, response_data['Snapshot'][0]['revision_id'])
 
   def test_snapshot_is_latest_revision(self):

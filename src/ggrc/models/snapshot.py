@@ -24,7 +24,6 @@ from ggrc.models import revision
 from ggrc.models.mixins import base
 from ggrc.models.mixins import rest_handable
 from ggrc.models.mixins import with_last_assessment_date
-from ggrc.models.mixins.synchronizable import Synchronizable
 from ggrc.utils import benchmark
 from ggrc.utils import errors
 from ggrc.utils import referenced_objects
@@ -132,14 +131,17 @@ class Snapshot(rest_handable.WithDeleteHandable,
   @builder.simple_property
   def original_object_deleted(self):
     """Flag if the snapshot has the last revision and action is deleted."""
+    from ggrc.models import all_models
     if not self.revisions:
       return False
-    deleted = self.revisions[-1].action == "deleted"
-    external_deleted = (
-        self.revisions[-1].content["status"] == "Deprecated" and
-        issubclass(inflector.get_model(self.child_type), Synchronizable)
-    )
-    return bool(deleted or external_deleted)
+    resource_type = self.revisions[-1].content[u'type']
+    get_last_revision_for_object = all_models.Revision.query.filter(
+        all_models.Revision.resource_type == resource_type
+    ).order_by(
+        all_models.Revision.id.desc()
+    ).first()
+    deleted = get_last_revision_for_object.action == "deleted"
+    return deleted
 
   @builder.simple_property
   def is_identical_revision(self):

@@ -221,3 +221,25 @@ class TestControl(TestCase):
     self.assert403(response)
     control = db.session.query(all_models.Control).get(control.id)
     self.assertIsNotNone(control.title)
+
+  def test_control_snapshot_delete(self):
+    """Test delete control snapshot"""
+    with factories.single_commit():
+      control = factories.ControlFactory()
+      audit = factories.AuditFactory()
+      assessment = factories.AssessmentFactory(audit=audit)
+      factories.RelationshipFactory(
+          source=assessment,
+          destination=control,
+      )
+      snapshot = factories.SnapshotFactory(
+          parent=assessment.audit,
+          child_id=control.id,
+          child_type=control.type,
+          revision=factories.RevisionFactory(action="deleted")
+      )
+    snapshot = all_models.Snapshot.query.get(snapshot.id)
+    response = self.api.get(all_models.Snapshot, snapshot.id)
+    self.assert200(response)
+    response = response.json
+    self.assertTrue(response[u'snapshot'][u'original_object_deleted'])
