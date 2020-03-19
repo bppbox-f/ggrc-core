@@ -585,3 +585,84 @@ class TestImportPermissions(TestCase):
     }
     self._check_csv_response(response, expected_errors)
     self.assertEqual(len(models.Program.query.all()), 1)
+
+
+@ddt.ddt
+class TestImportGDriveFolder(TestCase):
+  """Test GDrive Folder ID during import."""
+
+  def setUp(self):
+    super(TestImportGDriveFolder, self).setUp()
+    self.api = api_helper.Api()
+
+  @ddt.data(("17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW",
+             "17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW"),
+            ("https://drive.google.com/corp/drive/"
+             "folders/17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW?usp=sharing",
+             "17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW"),
+            ("https://drive.google.com/corp/drive/"
+             "folders/17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW/",
+             "17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW"),
+            ("https://drive.google.com/corp/drive/"
+             "folders/17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW",
+             "17Bn0eeOsE0vMyEY0tLrcCckpy0iToTyW"),
+            ("https://drive.google.com/corp/drive/"
+             "folders/1YP7kusoZkJC5MRw0OaUsHzosWfocQHDv",
+             "1YP7kusoZkJC5MRw0OaUsHzosWfocQHDv"),
+            ("https://drive.google.com/corp/drive/"
+             "folders/1yGebIhT_XFcyfrCXU-EN-KOL0nqzcqWn",
+             "1yGebIhT_XFcyfrCXU-EN-KOL0nqzcqWn"),
+            ("https://drive.google.com/corp/drive/"
+             "folders/2NPJgSHa55oS2XUmUXa78Mtdt55ktW2s1",
+             "2NPJgSHa55oS2XUmUXa78Mtdt55ktW2s1"),
+            ("", ""),
+            )
+  @ddt.unpack
+  def test_import_gdrive_folder(self, folder_id, exp_output):
+    """Test import GDrive Folder ID without error."""
+
+    program = factories.ProgramFactory()
+    program_id = program.id
+    response = self.import_data(OrderedDict([
+        ("object_type", "Program"),
+        ("Code*", program.slug),
+        ("GDrive Folder ID", folder_id),
+    ]))
+    program = all_models.Program.query.get(program_id)
+    self.assertEqual(program.folder, exp_output)
+    self._check_csv_response(response, {})
+
+  @ddt.data(("https://drive.google.com/drive/"
+             "folders/17Bn0eeOsE0vMyEY0tLrcCckpy0iToTy", ""),
+            ("invalid1234567", ""),
+            ("17Bn0eeOsE0vMyEY0tLrcCckpy0iToT"
+             "yWblahblahblahblah", ""),
+            ("https://drive.google.com/drive/"
+             "folders/17Bn0eeOsE0vMyEY0tLrcCckpy0iToTy"
+             "blahblah?usp=sharing", ""),
+            ("dshdgsgdshadgshfgahsfhfghfsfsfsfsfgfgf", ""),
+            )
+  @ddt.unpack
+  def test_import_gdrive_folder_error(self, folder_id, exp_output):
+    """Test import GDrive Folder ID with error."""
+
+    program = factories.ProgramFactory()
+    program_id = program.id
+    response = self.import_data(OrderedDict([
+        ("object_type", "Program"),
+        ("Code*", program.slug),
+        ("GDrive Folder ID", folder_id),
+    ]))
+    expected_errors = {
+        "Program": {
+            "row_warnings": {
+                "Line 3: GDrive Folder ID field does not contain a"
+                " valid value. That value '{}' will be ignored.".format(
+                    folder_id
+                ),
+            }
+        }
+    }
+    program = all_models.Program.query.get(program_id)
+    self.assertEqual(program.folder, exp_output)
+    self._check_csv_response(response, expected_errors)

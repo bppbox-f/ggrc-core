@@ -1150,3 +1150,24 @@ class JsonListColumnHandler(ColumnHandler):
           )
       )
     return "\n".join(values)
+
+
+class GDriveFolderColumnHandler(ColumnHandler):
+  """Handler for fields with GDrive Folder ID link."""
+
+  def parse_item(self):
+    """Parse GDrive Folder ID link."""
+
+    value = self.raw_value
+    if value == '':
+      return None
+    folder = re.findall(r"([https:\/\/drive\.google\.com"
+                        r"\/corp\/drive\/folders\/]*?)"
+                        r"([\w-]{33,})[/\?]*.*", value
+                        )
+    if folder:
+      _, hash_id = folder[0]
+      if len(hash_id) == 33:
+        return hash_id
+    self.add_warning(errors.FOLDER_IMPORT_ERROR, value=value)
+    return None

@@ -280,3 +280,7 @@ SNAPSHOT_IMPORT_ERROR = (u"Line {line}: Import for Snapshot object is not "
 READONLY_WILL_BE_IGNORED = (u"Line {line}: Field '{column_name}' is "
                             u"non-editable via import. The "
                             u"'{column_name}' column will be ignored.")
+
+FOLDER_IMPORT_ERROR = (u"Line {line}: GDrive Folder ID field does "
+                       u"not contain a valid value. That "
+                       u"value '{value}' will be ignored.")

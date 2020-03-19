@@ -81,6 +81,7 @@ _DEFAULT_COLUMN_HANDLERS_DICT = {
     "evidences_url": evidence.EvidenceUrlHandler,
     "finished_date": handlers.NullableDateColumnHandler,
     "fraud_related": boolean.CheckboxColumnHandler,
+    "folder": handlers.GDriveFolderColumnHandler,
     "is_enabled": boolean.CheckboxColumnHandler,
     "is_verification_needed": boolean.StrictBooleanColumnHandler,
     "issue_tracker": handlers.ExportOnlyIssueTrackerColumnHandler,
