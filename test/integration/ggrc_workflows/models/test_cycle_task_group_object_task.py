@@ -385,3 +385,40 @@ class TestCycleTaskApiCalls(workflow_test_case.WorkflowTestCase):
     })
 
     self.assertEqual(response.status_code, 201)
+
+class TestCycleTaskViewlinks(BaseTestCase):
+  """Test viewLink for CycleTaskGroupObjectTask"""
+
+  def setUp(self):
+    super(TestCycleTaskViewlinks, self).setUp()
+    self.api = api_helper.Api()
+
+  def test_viewlink_current(self):
+    '''Test viewlink leads to 'current' tab in current workflow'''
+    with factories.single_commit():
+      workflow = wf_factories.WorkflowFactory()
+      cycle = wf_factories.CycleFactory(workflow=workflow)
+      ctask = wf_factories.CycleTaskGroupObjectTaskFactory(title='title',
+                                                           description='desc',
+                                                           cycle=cycle,
+                                                           )
+      wf_id = workflow.id
+      ct_id = ctask.id
+    link = r'/workflows/{}#current'.format(wf_id)
+    res = self.api.get(all_models.CycleTaskGroupObjectTask, ct_id)
+    self.assertEqual(link, res.json[u'cycle_task_group_object_task'][u'viewLink'])
+
+  def test_viewlink_history(self):
+    '''Test viewlink leads to 'history' tab in current workflow'''
+    with factories.single_commit():
+      workflow = wf_factories.WorkflowFactory()
+      cycle = wf_factories.CycleFactory(workflow=workflow, is_current=False)
+      ctask = wf_factories.CycleTaskGroupObjectTaskFactory(title='title',
+                                                           description='desc',
+                                                           cycle=cycle,
+                                                           )
+      wf_id = workflow.id
+      ct_id = ctask.id
+    link = r'/workflows/{}#history'.format(wf_id)
+    res = self.api.get(all_models.CycleTaskGroupObjectTask, ct_id)
+    self.assertEqual(link, res.json[u'cycle_task_group_object_task'][u'viewLink'])

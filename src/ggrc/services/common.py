@@ -411,8 +411,23 @@ class ModelView(View):
     return "/api/{}".format(plural_name)
 
   @classmethod
+  def url_for_cycle_task_group_object_task(cls, *args):
+    """Returns url for CycleTaskGroupObjectTask."""
+    url = "/workflows"
+    if args:
+      cycle = args[0].cycle
+      flag = not cycle.is_current
+      workflow_id = cycle.workflow.id
+      url2 = 'history' if flag else 'current'
+      url = '%s/%s#%s' % (url, workflow_id, url2)
+    return url
+
+  @classmethod
   def url_for(cls, *args, **kwargs):
     """Returns url for."""
+    if cls.__name__ == "CycleTaskGroupObjectTaskObjectView":
+      return cls.url_for_cycle_task_group_object_task(*args)
+
     url = cls.base_url_for()
     if args:
       arg = args[0]
